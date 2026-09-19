@@ -1,0 +1,7 @@
+{
+  "name": "আমার ফ্ল্যাট",
+  "description": "সম্পূর্ণ ফ্ল্যাট ও ভাড়াটিয়া ব্যবস্থাপনা ড্যাশবোর্ড — ইউটিলিটি বিল, ইনভয়েস, পেমেন্ট, অভিযোগ, পুলিশ ভেরিফিকেশন ও আইনি ডকুমেন্ট সহ।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

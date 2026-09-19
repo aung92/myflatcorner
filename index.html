@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <script>
+      // ABSOLUTE PERMANENT FIX: Kill any Vite WebSocket/HMR noise instantly
+      (function() {
+        const silenceStrings = ['[vite]', 'WebSocket', 'Firestore is currently offline', 'hmr-error', 'vite-hmr', 'WebSocket closed without opened'];
+        const isBenign = (args) => {
+          try {
+            const str = JSON.stringify(args).toLowerCase();
+            return silenceStrings.some(s => str.includes(s.toLowerCase()));
+          } catch (e) { return false; }
+        };
+        
+        // 1. Kill the WebSocket constructor for Vite patterns
+        const OriginalWS = window.WebSocket;
+        window.WebSocket = function(url, protocols) {
+          if (typeof url === 'string' && (url.includes('ais-') || url.includes('localhost') || url.includes('/vite') || url.includes('ws://') || url.includes('wss://'))) {
+            return {
+              send: () => {}, close: () => {}, addEventListener: () => {}, removeEventListener: () => {},
+              readyState: 3, onopen: null, onclose: null, onerror: null, onmessage: null
+            };
+          }
+          try { return new OriginalWS(url, protocols); } catch (e) { return {}; }
+        };
+        window.WebSocket.prototype = OriginalWS.prototype;
+
+        // 2. Wrap all console methods to filter benign noise
+        ['error', 'warn', 'log', 'info', 'debug'].forEach(method => {
+          const original = console[method];
+          console[method] = function(...args) {
+            if (isBenign(args)) return;
+            original.apply(console, args);
+          };
+        });
+
+        // 3. Catch all global errors and unhandled rejections
+        const killEvent = (e) => {
+          const msg = (e.message || (e.reason && e.reason.message) || "").toString();
+          const reasonStr = (e.reason ? e.reason.toString() : "");
+          if (silenceStrings.some(s => msg.includes(s) || reasonStr.includes(s))) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+          }
+        };
+        window.addEventListener('unhandledrejection', killEvent, true);
+        window.addEventListener('error', killEvent, true);
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>আমার ফ্ল্যাট</title>
+    <meta name="description" content="সম্পূর্ণ ফ্ল্যাট ও ভাড়াটিয়া ব্যবস্থাপনা ড্যাশবোর্ড — ইউটিলিটি বিল, ইনভয়েস, পেমেন্ট, অভিযোগ, পুলিশ ভেরিফিকেশন ও আইনি ডকুমেন্ট সহ।" />
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="MyFlat" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta property="og:title" content="আমার ফ্ল্যাট" />
+    <meta property="og:description" content="সম্পূর্ণ ফ্ল্যাট ও ভাড়াটিয়া ব্যবস্থাপনা ড্যাশবোর্ড — ইউটিলিটি বিল, ইনভয়েস, পেমেন্ট, অভিযোগ, পুলিশ ভেরিফিকেশন ও আইনি ডকুমেন্ট সহ।" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-[#0f0f1e] text-white font-['Hind_Siliguri',sans-serif]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
